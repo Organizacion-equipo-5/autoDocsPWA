@@ -1,6 +1,6 @@
 /* autoDocs · Service Worker
    Para publicar una nueva versión: cambia VERSION (p. ej. 1.0.0 -> 1.1.0). */
-const VERSION = '2.2.0';
+const VERSION = '2.3.0';
 const CACHE = 'autodocs-v' + VERSION;
 
 const ASSETS = [
@@ -19,7 +19,9 @@ const ASSETS = [
   'icons/favicon.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',
-  'icons/maskable-512.png'
+  'icons/maskable-512.png',
+  'icons/screenshot-wide.png',
+  'icons/screenshot-mobile.png'
 ];
 
 self.addEventListener('install', (event) => {

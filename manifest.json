@@ -2,12 +2,13 @@
   "name": "AutoDocs AI",
   "short_name": "AutoDocs",
   "description": "Analiza tu código y genera su documentación técnica, también sin conexión.",
+  "id": "./",
   "lang": "es",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-    "background_color": "#0f1418",
+  "background_color": "#0f1418",
   "theme_color": "#0f1418",
   "categories": [
     "productivity",
@@ -31,6 +32,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icons/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Inicio de AutoDocs AI en escritorio"
+    },
+    {
+      "src": "icons/screenshot-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Inicio de AutoDocs AI en móvil"
     }
   ],
   "shortcuts": [
