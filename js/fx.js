@@ -1,6 +1,17 @@
 // Efectos visuales y tema claro/oscuro.
 // El tema se guarda en localStorage y se aplica antes de pintar (ver script inline en index.html).
 
+/* ---------- estado del fondo de partículas (ligero y opcional) ---------- */
+const $lienzo = document.getElementById('fx');
+let ctx = null;
+let particulas = [];
+let ancho = 0;
+let alto = 0;
+let dpr = 1;
+let animando = false;
+let ultimoFrame = 0;
+const reducirMovimiento = matchMedia('(prefers-reduced-motion: reduce)');
+
 const CLAVE_TEMA = 'autodocs-tema';
 const $raiz = document.documentElement;
 const $botonTema = document.getElementById('tema');
@@ -29,15 +40,6 @@ if ($botonTema) {
 }
 
 /* ---------- fondo de partículas (ligero y opcional) ---------- */
-const $lienzo = document.getElementById('fx');
-let ctx = null;
-let particulas = [];
-let ancho = 0;
-let alto = 0;
-let dpr = 1;
-let animando = false;
-let ultimoFrame = 0;
-const reducirMovimiento = matchMedia('(prefers-reduced-motion: reduce)');
 
 function tamano() {
   if (!$lienzo) return;

@@ -1,3 +1,19 @@
+/* Tipografías autoalojadas (antes se cargaban desde Google Fonts). */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../fonts/geist-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('../fonts/jetbrains-mono-latin.woff2') format('woff2');
+}
+
 :root, :root[data-theme="dark"] {
   --bg: #0f1418; --surface: rgba(27,32,36,.6); --surface-2: #1b2024; --surface-3: #252b2e;
   --text: #dee3e8; --text-2: #bdc8d1; --primary: #39b2f8; --secondary: #c0c1ff;
