@@ -20,14 +20,22 @@
   <canvas id="fx" aria-hidden="true"></canvas>
 
   <header class="top">
-    <a class="brand" href="#/" aria-label="AutoDocs AI, ir a proyectos">
-      <img src="icons/favicon.svg" alt="" width="28" height="28">
+    <a class="brand" href="#/" aria-label="AutoDocs AI, ir al inicio">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
       <span>Auto<b>Docs</b> AI</span>
     </a>
+    <nav class="nav-links" aria-label="Secciones">
+      <a href="#/" data-scroll="features">Funciones</a>
+      <a href="#/" data-scroll="how">Cómo funciona</a>
+      <a href="#/" data-scroll="stack">Stack</a>
+      <a href="#/" data-scroll="pricing">Planes</a>
+    </nav>
     <div class="top-right">
       <button id="instalar" class="btn small" type="button" hidden>Instalar app</button>
       <span id="net" class="pill" role="status">En línea</span>
-      <button id="tema" class="btn small icono" type="button" aria-label="Cambiar a tema claro">☀</button>
+      <a class="btn small solo-pc" href="#/estado">Estado</a>
+      <a class="btn small solo-pc" href="#/proyectos">Mis proyectos</a>
+      <a class="btn small primary solo-pc" href="#/nuevo">Analizar ahora</a>
     </div>
   </header>
 
@@ -38,8 +46,11 @@
 
   <main id="main" tabindex="-1"></main>
 
+  <button id="tema" class="theme-float glass" type="button" aria-label="Cambiar a tema claro">☀</button>
+
   <nav class="tabs" aria-label="Principal">
-    <a href="#/" data-tab="">Proyectos</a>
+    <a href="#/" data-tab="">Inicio</a>
+    <a href="#/proyectos" data-tab="proyectos">Proyectos</a>
     <a href="#/nuevo" data-tab="nuevo">Analizar</a>
     <a href="#/estado" data-tab="estado">Estado</a>
   </nav>

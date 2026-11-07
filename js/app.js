@@ -1,11 +1,13 @@
 import { WELCOME } from './config.js';
 import { getAll, get, put, del, clear } from './db.js';
+import { INICIO } from './landing.js';
 import { esc, analizarZip, analizarGitHub } from './analyzer.js';
 import { reporteHTML, reporteMD, documentoHTML, MERMAID } from './report.js';
 
 const $main = document.getElementById('main');
 const $toast = document.getElementById('toast');
 const activos = new Set();
+const progresos = new Map();
 let regSW = null;
 let promptInstalar = null;
 let quiereActualizar = false;
@@ -44,21 +46,26 @@ function marcar(el, msg) {
 async function procesar(rec, trabajo) {
   activos.add(rec.id);
   try {
-    const analisis = await trabajo((m) => { rec.progreso = m; });
-    delete rec.progreso;
+    const analisis = await trabajo((m) => {
+      progresos.set(rec.id, m);
+      const el = document.getElementById('progreso');
+      if (el && Number(el.dataset.id) === rec.id) el.textContent = m;
+    });
     Object.assign(rec, { estado: 'listo', analisis, actualizado: Date.now() });
     await put('projects', rec);
     aviso(`Documentación lista: ${rec.nombre}`);
     notificar('Documentación lista', rec.nombre);
   } catch (err) {
     console.error(err);
-    delete rec.progreso;
     Object.assign(rec, { estado: 'error', error: err.amable ? err.message : 'Ocurrió un error inesperado al analizar el proyecto.', actualizado: Date.now() });
     await put('projects', rec);
-    aviso('No se pudo analizar el proyecto. Revisa el detalle en la lista.');
+    aviso('No se pudo analizar el proyecto.');
   } finally {
     activos.delete(rec.id);
-    if (rutaActual() === '') vistaProyectos();
+    progresos.delete(rec.id);
+    const [, r, a] = location.hash.replace(/^#/, '').split('/');
+    if (r === 'proyectos') vistaProyectos();
+    else if (r === 'ver' && Number(a) === rec.id) vistaVer(rec.id);
   }
 }
 async function iniciar(nombre, origen, trabajo) {
@@ -66,7 +73,7 @@ async function iniciar(nombre, origen, trabajo) {
   rec.id = await put('projects', rec);
   procesar(rec, trabajo);
   aviso('Análisis iniciado en segundo plano');
-  location.hash = '#/';
+    location.hash = '#/proyectos';
 }
 
 /* ---------- vistas ---------- */
@@ -170,7 +177,21 @@ async function cargarMermaid() {
 
 async function vistaVer(id) {
   const p = await get('projects', Number(id));
-  if (!p || p.estado !== 'listo') return noEncontrado();
+  if (!p) return noEncontrado();
+  if (p.estado === 'procesando') {
+    $main.innerHTML = `
+      <section class="hero"><h1>Analizando ${esc(p.nombre)}…</h1>
+        <p id="progreso" data-id="${p.id}" role="status">${esc(progresos.get(p.id) || 'Preparando el análisis…')}</p></section>
+      <div class="tarjeta"><p>Puedes esperar aquí: la documentación aparecerá sola al terminar.</p></div>`;
+    return;
+  }
+  if (p.estado === 'error') {
+    $main.innerHTML = `
+      <section class="hero"><h1>No se pudo analizar</h1><p>${esc(p.nombre)}</p></section>
+      <div class="tarjeta"><p class="error">${esc(p.error)}</p>
+        <div class="acciones"><a class="btn primary" href="#/nuevo">Intentar de nuevo</a><a class="btn" href="#/proyectos">Mis proyectos</a></div></div>`;
+    return;
+  }
   $main.innerHTML = `
     <div class="acciones pegado">
       <button class="btn" type="button" data-x="md">Descargar Markdown</button>
@@ -188,7 +209,6 @@ async function vistaVer(id) {
     else if (x === 'pdf') window.print();
   });
 }
-
 function versionSW() {
   return new Promise((resolve) => {
     const c = navigator.serviceWorker?.controller;
@@ -268,12 +288,14 @@ function noEncontrado() {
 async function enrutar() {
   const [, ruta = '', arg = ''] = location.hash.replace(/^#/, '').split('/');
   document.querySelectorAll('.tabs a').forEach((a) => {
-    const activo = a.dataset.tab === (ruta === 'ver' ? '' : ruta);
+    const activo = a.dataset.tab === (ruta === 'ver' ? 'proyectos' : ruta);
     a.classList.toggle('on', activo);
     activo ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current');
   });
+  $main.className = ruta === '' ? 'landing' : '';
   try {
-    if (ruta === '') await vistaProyectos();
+    if (ruta === '') vistaInicio();
+    else if (ruta === 'proyectos') await vistaProyectos();
     else if (ruta === 'nuevo') await vistaNuevo();
     else if (ruta === 'ver') await vistaVer(arg);
     else if (ruta === 'estado') await vistaEstado();
@@ -287,6 +309,29 @@ async function enrutar() {
 }
 window.addEventListener('hashchange', enrutar);
 
+function vistaInicio() {
+  $main.innerHTML = INICIO;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  $main.querySelectorAll('.tilt').forEach((c) => {
+    const t = c.firstElementChild;
+    c.addEventListener('mousemove', (e) => {
+      const r = c.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      t.style.transform = `perspective(1000px) rotateX(${(y - r.height / 2) / 40}deg) rotateY(${(r.width / 2 - x) / 40}deg) scale3d(1.02,1.02,1.02)`;
+    });
+    c.addEventListener('mouseleave', () => { t.style.transform = ''; });
+  });
+}
+
+// Enlaces de sección (Funciones, Cómo funciona…): desplazan la página sin romper el enrutador.
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('[data-scroll]');
+  if (!a) return;
+  e.preventDefault();
+  const ir = () => document.getElementById(a.dataset.scroll)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  if (rutaActual() === '') ir();
+  else { location.hash = '#/'; setTimeout(ir, 250); }
+});
 /* ---------- conexión ---------- */
 const $net = document.getElementById('net');
 function estadoRed() {
