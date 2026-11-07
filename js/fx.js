@@ -101,6 +101,8 @@ function paso(ts) {
 
 function iniciarFondo() {
   if (!$lienzo || reducirMovimiento.matches) return;
+  // En pantallas pequeñas no se anima: ahorra batería y trabajo del hilo principal.
+  if (window.innerWidth < 640) return;
   ctx = $lienzo.getContext('2d');
   if (!ctx) return;
   tamano();
@@ -116,7 +118,7 @@ function detenerFondo() {
 if ($lienzo) {
   iniciarFondo();
   addEventListener('resize', () => {
-    if (!animando) return;
+    if (!animando) { if (window.innerWidth >= 640) iniciarFondo(); return; }
     tamano();
     pintarFondo();
   }, { passive: true });
