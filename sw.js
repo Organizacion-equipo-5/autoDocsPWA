@@ -1,6 +1,6 @@
 /* autoDocs · Service Worker
    Para publicar una nueva versión: cambia VERSION (p. ej. 1.0.0 -> 1.1.0). */
-const VERSION = '2.0.0';
+const VERSION = '2.1.0';
 const CACHE = 'autodocs-v' + VERSION;
 
 const ASSETS = [
@@ -12,6 +12,7 @@ const ASSETS = [
   'js/config.js',
   'js/db.js',
   'js/analyzer.js',
+  'js/fx.js',
   'js/report.js',
   'js/zip.js',
   'icons/favicon.svg',

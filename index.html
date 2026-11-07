@@ -1,27 +1,33 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AutoDocs AI · Documentación automática de código</title>
   <meta name="description" content="AutoDocs AI analiza el código de tu proyecto y genera su documentación técnica: estructura, funciones, endpoints, métricas y diagramas.">
-  <meta name="theme-color" content="#0f4c5c">
+  <meta name="theme-color" content="#0f1418">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem('autodocs-tema') || 'dark'; } catch (e) {}</script>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <a class="skip" href="#main">Saltar al contenido</a>
+  <canvas id="fx" aria-hidden="true"></canvas>
 
   <header class="top">
     <a class="brand" href="#/" aria-label="AutoDocs AI, ir a proyectos">
       <img src="icons/favicon.svg" alt="" width="28" height="28">
-      <span>AutoDocs AI</span>
+      <span>Auto<b>Docs</b> AI</span>
     </a>
     <div class="top-right">
       <button id="instalar" class="btn small" type="button" hidden>Instalar app</button>
       <span id="net" class="pill" role="status">En línea</span>
+      <button id="tema" class="btn small icono" type="button" aria-label="Cambiar a tema claro">☀</button>
     </div>
   </header>
 
@@ -40,6 +46,7 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
   <noscript>AutoDocs AI necesita JavaScript para funcionar.</noscript>
+  <script type="module" src="js/fx.js"></script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
