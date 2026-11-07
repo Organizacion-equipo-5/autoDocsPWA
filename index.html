@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoDocs AI · Documentación automática de código</title>
+  <meta name="description" content="AutoDocs AI analiza el código de tu proyecto y genera su documentación técnica: estructura, funciones, endpoints, métricas y diagramas.">
+  <meta name="theme-color" content="#0f4c5c">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Saltar al contenido</a>
+
+  <header class="top">
+    <a class="brand" href="#/" aria-label="AutoDocs AI, ir a proyectos">
+      <img src="icons/favicon.svg" alt="" width="28" height="28">
+      <span>AutoDocs AI</span>
+    </a>
+    <div class="top-right">
+      <button id="instalar" class="btn small" type="button" hidden>Instalar app</button>
+      <span id="net" class="pill" role="status">En línea</span>
+    </div>
+  </header>
+
+  <div id="update" class="banner" role="alert" hidden>
+    <span>Hay una versión nueva de AutoDocs AI.</span>
+    <button id="btn-update" class="btn small primary" type="button">Actualizar ahora</button>
+  </div>
+
+  <main id="main" tabindex="-1"></main>
+
+  <nav class="tabs" aria-label="Principal">
+    <a href="#/" data-tab="">Proyectos</a>
+    <a href="#/nuevo" data-tab="nuevo">Analizar</a>
+    <a href="#/estado" data-tab="estado">Estado</a>
+  </nav>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <noscript>AutoDocs AI necesita JavaScript para funcionar.</noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
