@@ -89,6 +89,22 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 .campo label { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
 .error { margin: 4px 0 0; color: var(--error); font-size: .88rem; font-weight: 600; }
 
+/* v2.5.0: el atributo hidden debe ganar siempre (antes .banner y .btn lo anulaban con su display) */
+[hidden] { display: none !important; }
+/* v2.5.0: el foco programático del <main> (accesibilidad) no debe dibujar un recuadro alrededor de toda la pantalla */
+main:focus, main:focus-visible { outline: none; }
+
+:root[data-theme="light"] .banner { color: #fff; }
+/* v2.5.0: orden y fijado de proyectos */
+select { min-height: 44px; padding: 8px 36px 8px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--input-bg); color: var(--input-text); font: inherit; outline: none; cursor: pointer; transition: border-color .2s; }
+select:focus { border-color: var(--primary); }
+.bar select { flex: 0 1 190px; }
+.resumen { margin: 0 0 12px; }
+.item.fijado { border-left-color: var(--secondary); }
+.btn.pin { font-size: 1.25rem; line-height: 1; color: var(--text-2); }
+.btn.pin.on { color: var(--warn); border-color: var(--warn); }
+.btn.pin:hover { color: var(--warn); border-color: var(--warn); }
+
 .lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .item { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-radius: var(--radio); border-left: 4px solid var(--primary); transition: border-color .3s, box-shadow .3s; }
 .item:hover { border-color: var(--glass-hover); border-left-color: var(--primary); }
