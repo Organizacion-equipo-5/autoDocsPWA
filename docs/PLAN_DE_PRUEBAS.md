@@ -21,8 +21,13 @@ Rellena "Resultado obtenido" y "Estado" (Aprobado / No aprobado). Herramientas: 
 | 15 | Búsqueda y eliminación | Buscar y eliminar un proyecto | Filtra; al confirmar desaparece de IndexedDB | | |
 | 16 | Modo offline | Network → Offline → recargar y analizar un .zip | La app abre y el análisis local funciona | | |
 | 17 | Offline con GitHub | Offline → analizar URL | Mensaje claro, sin pantalla rota | | |
-| 18 | Caché | Application → Cache Storage | Existe `autodocs-v2.0.0` con el app shell | | |
+| 18 | Caché | Application → Cache Storage | Existe la caché `autodocs-v<VERSION de sw.js>` con el app shell | | |
 | 19 | Lighthouse | Incógnito → Lighthouse (móvil) | Categorías ≥ 90; PWA instalable | | |
 | 20 | Instalación | Botón "Instalar app" | Se instala con nombre e icono correctos | | |
 | 21 | Actualización | Subir versión (ver README) y publicar | Aparece "Actualizar ahora" y los proyectos persisten | | |
 | 22 | Copia de seguridad | Estado → Exportar → Importar | Los proyectos se restauran | | |
+| 23 | Fijar proyecto (v2.5.0) | Proyectos → ☆ en un proyecto | Pasa a ★, sube al inicio y se conserva al recargar | | |
+| 24 | Ordenar proyectos (v2.5.0) | Cambiar selector: recientes / nombre / calidad | La lista se reordena; los fijados siempre arriba; la preferencia persiste | | |
+| 25 | Eliminar durante análisis (fix) | Iniciar análisis y eliminar el proyecto antes de que termine | No reaparece al terminar | | |
+| 26 | Importar copia inválida (fix) | Importar un JSON con registros dañados | Mensaje de error y los datos actuales no cambian | | |
+| 27 | Datos tras actualizar | Actualizar de 2.4.1 a 2.5.0 con proyectos guardados y `autodocs-tema` en localStorage | Proyectos y tema se conservan | | |
