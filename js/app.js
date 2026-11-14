@@ -51,12 +51,15 @@ async function procesar(rec, trabajo) {
       const el = document.getElementById('progreso');
       if (el && Number(el.dataset.id) === rec.id) el.textContent = m;
     });
+    // Si el usuario eliminó el proyecto mientras se analizaba, no se vuelve a guardar.
+    if (!(await get('projects', rec.id))) return;
     Object.assign(rec, { estado: 'listo', analisis, actualizado: Date.now() });
     await put('projects', rec);
     aviso(`Documentación lista: ${rec.nombre}`);
     notificar('Documentación lista', rec.nombre);
   } catch (err) {
     console.error(err);
+    if (!(await get('projects', rec.id))) return;
     Object.assign(rec, { estado: 'error', error: err.amable ? err.message : 'Ocurrió un error inesperado al analizar el proyecto.', actualizado: Date.now() });
     await put('projects', rec);
     aviso('No se pudo analizar el proyecto.');
@@ -77,26 +80,48 @@ async function iniciar(nombre, origen, trabajo) {
 }
 
 /* ---------- vistas ---------- */
+// v2.5.0: criterios de orden. La preferencia se guarda en localStorage (opcional: si falla, se usa "recientes").
+const ORDENES = {
+  recientes: { texto: 'Más recientes', fn: (a, b) => b.actualizado - a.actualizado },
+  nombre: { texto: 'Nombre (A-Z)', fn: (a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }) },
+  calidad: { texto: 'Mayor calidad', fn: (a, b) => (b.analisis?.metricas?.puntaje ?? -1) - (a.analisis?.metricas?.puntaje ?? -1) }
+};
+function ordenGuardado() {
+  try { const o = localStorage.getItem('autodocs-orden'); return ORDENES[o] ? o : 'recientes'; } catch { return 'recientes'; }
+}
+
 async function vistaProyectos() {
-  const proyectos = (await getAll('projects')).sort((a, b) => b.actualizado - a.actualizado);
+  const proyectos = await getAll('projects');
+  let orden = ordenGuardado();
+  const fijados = () => proyectos.filter((p) => p.fijado).length;
   $main.innerHTML = `
     <section class="hero"><h1>Tus proyectos</h1><p>${esc(WELCOME)}</p></section>
     <div class="bar">
       <label class="sr" for="q">Buscar proyectos</label>
       <input id="q" type="search" placeholder="Buscar por nombre u origen" autocomplete="off">
+      <label class="sr" for="orden">Ordenar proyectos</label>
+      <select id="orden">${Object.entries(ORDENES).map(([k, o]) => `<option value="${k}"${k === orden ? ' selected' : ''}>${o.texto}</option>`).join('')}</select>
       <a class="btn primary" href="#/nuevo">Analizar proyecto</a>
     </div>
+    <p id="resumen" class="meta resumen" role="status"></p>
     <ul id="lista" class="lista"></ul>`;
   const $lista = document.getElementById('lista');
-  const pintar = (q = '') => {
-    const t = q.trim().toLowerCase();
-    const items = proyectos.filter((p) => !t || p.nombre.toLowerCase().includes(t) || p.origen.toLowerCase().includes(t));
+  const $q = document.getElementById('q');
+  const pintar = () => {
+    const t = $q.value.trim().toLowerCase();
+    // Los proyectos fijados siempre van primero; dentro de cada grupo se aplica el orden elegido.
+    const items = proyectos
+      .filter((p) => !t || p.nombre.toLowerCase().includes(t) || p.origen.toLowerCase().includes(t))
+      .sort((a, b) => (Number(!!b.fijado) - Number(!!a.fijado)) || ORDENES[orden].fn(a, b));
+    document.getElementById('resumen').textContent = proyectos.length
+      ? `${proyectos.length} ${proyectos.length === 1 ? 'proyecto' : 'proyectos'} · ${fijados()} ${fijados() === 1 ? 'fijado' : 'fijados'}`
+      : '';
     if (!items.length) {
       $lista.innerHTML = `<li class="vacio-estado">${proyectos.length ? 'Ningún proyecto coincide con la búsqueda.' : 'Aún no tienes proyectos. Sube un .zip o indica un repositorio de GitHub.'}</li>`;
       return;
     }
     $lista.innerHTML = items.map((p) => `
-      <li class="item">
+      <li class="item${p.fijado ? ' fijado' : ''}">
         <div class="item-info">
           ${p.estado === 'listo' ? `<a class="item-titulo" href="#/ver/${p.id}">${esc(p.nombre)}</a>` : `<span class="item-titulo">${esc(p.nombre)}</span>`}
           <span class="meta">${esc(p.origen)} · ${fechaCorta(p.actualizado)}</span>
@@ -105,13 +130,31 @@ async function vistaProyectos() {
         </div>
         <div class="item-acc">
           ${p.estado === 'listo' ? `<span class="pill">Calidad ${p.analisis.metricas.puntaje}/100</span><a class="btn small" href="#/ver/${p.id}">Ver</a>` : ''}
+          <button class="btn small icono pin${p.fijado ? ' on' : ''}" type="button" data-fijar="${p.id}" aria-pressed="${p.fijado ? 'true' : 'false'}" aria-label="${p.fijado ? 'Quitar de fijados' : 'Fijar'} ${esc(p.nombre)}" title="${p.fijado ? 'Quitar de fijados' : 'Fijar arriba'}">${p.fijado ? '★' : '☆'}</button>
           <button class="btn small danger" type="button" data-borrar="${p.id}" aria-label="Eliminar ${esc(p.nombre)}">Eliminar</button>
         </div>
       </li>`).join('');
   };
   pintar();
-  document.getElementById('q').addEventListener('input', (e) => pintar(e.target.value));
+  $q.addEventListener('input', pintar);
+  document.getElementById('orden').addEventListener('change', (e) => {
+    orden = ORDENES[e.target.value] ? e.target.value : 'recientes';
+    try { localStorage.setItem('autodocs-orden', orden); } catch { /* sin almacenamiento: no se recuerda */ }
+    pintar();
+  });
   $lista.addEventListener('click', async (e) => {
+    const idFijar = e.target.closest('[data-fijar]')?.dataset.fijar;
+    if (idFijar) {
+      const p = proyectos.find((x) => x.id === Number(idFijar));
+      if (!p) return;
+      // Se guarda solo el campo nuevo `fijado`; los registros anteriores (sin el campo) siguen siendo válidos.
+      p.fijado = !p.fijado;
+      await put('projects', p);
+      pintar();
+      aviso(p.fijado ? `Fijado: ${p.nombre}` : `Ya no está fijado: ${p.nombre}`);
+      document.querySelector(`[data-fijar="${p.id}"]`)?.focus();
+      return;
+    }
     const id = e.target.closest('[data-borrar]')?.dataset.borrar;
     if (!id) return;
     const p = proyectos.find((x) => x.id === Number(id));
@@ -267,16 +310,30 @@ async function vistaEstado() {
   };
   document.getElementById('b-imp').onchange = async (e) => {
     const f = e.target.files[0];
+    e.target.value = ''; // permite volver a elegir el mismo archivo si se cancela o falla
     if (!f) return;
+    let c;
     try {
-      const c = JSON.parse(await f.text());
+      c = JSON.parse(await f.text());
       if (c.app !== 'autoDocs' || !Array.isArray(c.projects)) throw new Error('formato');
-      if (!confirm('Esto reemplazará los datos actuales por los de la copia. ¿Continuar?')) return;
+      // Se valida TODO antes de tocar los datos actuales.
+      const valido = (p) => p && typeof p === 'object' && typeof p.nombre === 'string' && typeof p.origen === 'string' &&
+        ['listo', 'error', 'procesando'].includes(p.estado) && (p.estado !== 'listo' || p.analisis?.metricas);
+      if (!c.projects.every(valido)) throw new Error('registros');
+    } catch { return aviso('El archivo no es una copia válida de AutoDocs AI. No se modificó nada.'); }
+    if (!confirm(`Esto reemplazará los datos actuales por los de la copia (${c.projects.length} proyectos). ¿Continuar?`)) return;
+    const previos = await getAll('projects'); // respaldo en memoria por si algo falla a medias
+    try {
       await clear('projects');
       for (const p of c.projects) await put('projects', p);
       aviso('Copia importada');
-      vistaEstado();
-    } catch { aviso('El archivo no es una copia válida de AutoDocs AI.'); }
+    } catch (err) {
+      console.error(err);
+      await clear('projects');
+      for (const p of previos) await put('projects', p);
+      aviso('No se pudo importar la copia. Se restauraron tus datos anteriores.');
+    }
+    vistaEstado();
   };
 }
 
