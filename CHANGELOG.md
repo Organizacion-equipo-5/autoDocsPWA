@@ -10,6 +10,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 - Plan de pruebas ampliado (casos 23-27) y documentación del proceso de liberación.
 
 ### Cambiado
+- Mejor contraste del aviso de actualización en tema claro (texto blanco sobre fondo ámbar oscuro).
 - Se quitó el recuadro azul de foco que rodeaba todo el contenido tras cada navegación (el foco programático de `<main>` se mantiene para lectores de pantalla).
 - Estilos de la barra de búsqueda/orden y de los proyectos fijados (acento distinto y botón de estrella accesible con `aria-pressed`).
 - Texto de bienvenida actualizado a la versión 2.5.0.

@@ -94,6 +94,7 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 /* v2.5.0: el foco programático del <main> (accesibilidad) no debe dibujar un recuadro alrededor de toda la pantalla */
 main:focus, main:focus-visible { outline: none; }
 
+:root[data-theme="light"] .banner { color: #fff; }
 /* v2.5.0: orden y fijado de proyectos */
 select { min-height: 44px; padding: 8px 36px 8px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--input-bg); color: var(--input-text); font: inherit; outline: none; cursor: pointer; transition: border-color .2s; }
 select:focus { border-color: var(--primary); }
