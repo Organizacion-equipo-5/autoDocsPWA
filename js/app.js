@@ -51,12 +51,15 @@ async function procesar(rec, trabajo) {
       const el = document.getElementById('progreso');
       if (el && Number(el.dataset.id) === rec.id) el.textContent = m;
     });
+    // Si el usuario eliminó el proyecto mientras se analizaba, no se vuelve a guardar.
+    if (!(await get('projects', rec.id))) return;
     Object.assign(rec, { estado: 'listo', analisis, actualizado: Date.now() });
     await put('projects', rec);
     aviso(`Documentación lista: ${rec.nombre}`);
     notificar('Documentación lista', rec.nombre);
   } catch (err) {
     console.error(err);
+    if (!(await get('projects', rec.id))) return;
     Object.assign(rec, { estado: 'error', error: err.amable ? err.message : 'Ocurrió un error inesperado al analizar el proyecto.', actualizado: Date.now() });
     await put('projects', rec);
     aviso('No se pudo analizar el proyecto.');
@@ -307,16 +310,30 @@ async function vistaEstado() {
   };
   document.getElementById('b-imp').onchange = async (e) => {
     const f = e.target.files[0];
+    e.target.value = ''; // permite volver a elegir el mismo archivo si se cancela o falla
     if (!f) return;
+    let c;
     try {
-      const c = JSON.parse(await f.text());
+      c = JSON.parse(await f.text());
       if (c.app !== 'autoDocs' || !Array.isArray(c.projects)) throw new Error('formato');
-      if (!confirm('Esto reemplazará los datos actuales por los de la copia. ¿Continuar?')) return;
+      // Se valida TODO antes de tocar los datos actuales.
+      const valido = (p) => p && typeof p === 'object' && typeof p.nombre === 'string' && typeof p.origen === 'string' &&
+        ['listo', 'error', 'procesando'].includes(p.estado) && (p.estado !== 'listo' || p.analisis?.metricas);
+      if (!c.projects.every(valido)) throw new Error('registros');
+    } catch { return aviso('El archivo no es una copia válida de AutoDocs AI. No se modificó nada.'); }
+    if (!confirm(`Esto reemplazará los datos actuales por los de la copia (${c.projects.length} proyectos). ¿Continuar?`)) return;
+    const previos = await getAll('projects'); // respaldo en memoria por si algo falla a medias
+    try {
       await clear('projects');
       for (const p of c.projects) await put('projects', p);
       aviso('Copia importada');
-      vistaEstado();
-    } catch { aviso('El archivo no es una copia válida de AutoDocs AI.'); }
+    } catch (err) {
+      console.error(err);
+      await clear('projects');
+      for (const p of previos) await put('projects', p);
+      aviso('No se pudo importar la copia. Se restauraron tus datos anteriores.');
+    }
+    vistaEstado();
   };
 }
 
