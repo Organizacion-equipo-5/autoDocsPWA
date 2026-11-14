@@ -31,3 +31,4 @@ Rellena "Resultado obtenido" y "Estado" (Aprobado / No aprobado). Herramientas: 
 | 25 | Eliminar durante análisis (fix) | Iniciar análisis y eliminar el proyecto antes de que termine | No reaparece al terminar | | |
 | 26 | Importar copia inválida (fix) | Importar un JSON con registros dañados | Mensaje de error y los datos actuales no cambian | | |
 | 27 | Datos tras actualizar | Actualizar de 2.4.1 a 2.5.0 con proyectos guardados y `autodocs-tema` en localStorage | Proyectos y tema se conservan | | |
+| 28 | Aviso de actualización oculto (fix) | Abrir la app sin versión nueva pendiente | El aviso «Hay una versión nueva» y el botón «Instalar app» (si no es instalable) no se ven | | |

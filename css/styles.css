@@ -89,6 +89,11 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 .campo label { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
 .error { margin: 4px 0 0; color: var(--error); font-size: .88rem; font-weight: 600; }
 
+/* v2.5.0: el atributo hidden debe ganar siempre (antes .banner y .btn lo anulaban con su display) */
+[hidden] { display: none !important; }
+/* v2.5.0: el foco programático del <main> (accesibilidad) no debe dibujar un recuadro alrededor de toda la pantalla */
+main:focus, main:focus-visible { outline: none; }
+
 /* v2.5.0: orden y fijado de proyectos */
 select { min-height: 44px; padding: 8px 36px 8px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--input-bg); color: var(--input-text); font: inherit; outline: none; cursor: pointer; transition: border-color .2s; }
 select:focus { border-color: var(--primary); }

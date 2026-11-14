@@ -10,10 +10,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 - Plan de pruebas ampliado (casos 23-27) y documentación del proceso de liberación.
 
 ### Cambiado
+- Se quitó el recuadro azul de foco que rodeaba todo el contenido tras cada navegación (el foco programático de `<main>` se mantiene para lectores de pantalla).
 - Estilos de la barra de búsqueda/orden y de los proyectos fijados (acento distinto y botón de estrella accesible con `aria-pressed`).
 - Texto de bienvenida actualizado a la versión 2.5.0.
 
 ### Corregido
+- El aviso «Hay una versión nueva» y el botón «Instalar app» se veían siempre, aunque no hubiera actualización ni instalación disponible (la regla `display` de sus estilos anulaba el atributo `hidden`).
 - Un proyecto eliminado mientras se analizaba volvía a aparecer al terminar el análisis.
 - Al importar una copia de seguridad dañada se podían perder los datos actuales: ahora se valida antes de reemplazar y, si algo falla, se restauran los datos anteriores.
 - No se podía volver a elegir el mismo archivo de copia después de cancelar o fallar la importación.
