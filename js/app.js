@@ -77,26 +77,48 @@ async function iniciar(nombre, origen, trabajo) {
 }
 
 /* ---------- vistas ---------- */
+// v2.5.0: criterios de orden. La preferencia se guarda en localStorage (opcional: si falla, se usa "recientes").
+const ORDENES = {
+  recientes: { texto: 'Más recientes', fn: (a, b) => b.actualizado - a.actualizado },
+  nombre: { texto: 'Nombre (A-Z)', fn: (a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }) },
+  calidad: { texto: 'Mayor calidad', fn: (a, b) => (b.analisis?.metricas?.puntaje ?? -1) - (a.analisis?.metricas?.puntaje ?? -1) }
+};
+function ordenGuardado() {
+  try { const o = localStorage.getItem('autodocs-orden'); return ORDENES[o] ? o : 'recientes'; } catch { return 'recientes'; }
+}
+
 async function vistaProyectos() {
-  const proyectos = (await getAll('projects')).sort((a, b) => b.actualizado - a.actualizado);
+  const proyectos = await getAll('projects');
+  let orden = ordenGuardado();
+  const fijados = () => proyectos.filter((p) => p.fijado).length;
   $main.innerHTML = `
     <section class="hero"><h1>Tus proyectos</h1><p>${esc(WELCOME)}</p></section>
     <div class="bar">
       <label class="sr" for="q">Buscar proyectos</label>
       <input id="q" type="search" placeholder="Buscar por nombre u origen" autocomplete="off">
+      <label class="sr" for="orden">Ordenar proyectos</label>
+      <select id="orden">${Object.entries(ORDENES).map(([k, o]) => `<option value="${k}"${k === orden ? ' selected' : ''}>${o.texto}</option>`).join('')}</select>
       <a class="btn primary" href="#/nuevo">Analizar proyecto</a>
     </div>
+    <p id="resumen" class="meta resumen" role="status"></p>
     <ul id="lista" class="lista"></ul>`;
   const $lista = document.getElementById('lista');
-  const pintar = (q = '') => {
-    const t = q.trim().toLowerCase();
-    const items = proyectos.filter((p) => !t || p.nombre.toLowerCase().includes(t) || p.origen.toLowerCase().includes(t));
+  const $q = document.getElementById('q');
+  const pintar = () => {
+    const t = $q.value.trim().toLowerCase();
+    // Los proyectos fijados siempre van primero; dentro de cada grupo se aplica el orden elegido.
+    const items = proyectos
+      .filter((p) => !t || p.nombre.toLowerCase().includes(t) || p.origen.toLowerCase().includes(t))
+      .sort((a, b) => (Number(!!b.fijado) - Number(!!a.fijado)) || ORDENES[orden].fn(a, b));
+    document.getElementById('resumen').textContent = proyectos.length
+      ? `${proyectos.length} ${proyectos.length === 1 ? 'proyecto' : 'proyectos'} · ${fijados()} ${fijados() === 1 ? 'fijado' : 'fijados'}`
+      : '';
     if (!items.length) {
       $lista.innerHTML = `<li class="vacio-estado">${proyectos.length ? 'Ningún proyecto coincide con la búsqueda.' : 'Aún no tienes proyectos. Sube un .zip o indica un repositorio de GitHub.'}</li>`;
       return;
     }
     $lista.innerHTML = items.map((p) => `
-      <li class="item">
+      <li class="item${p.fijado ? ' fijado' : ''}">
         <div class="item-info">
           ${p.estado === 'listo' ? `<a class="item-titulo" href="#/ver/${p.id}">${esc(p.nombre)}</a>` : `<span class="item-titulo">${esc(p.nombre)}</span>`}
           <span class="meta">${esc(p.origen)} · ${fechaCorta(p.actualizado)}</span>
@@ -105,13 +127,31 @@ async function vistaProyectos() {
         </div>
         <div class="item-acc">
           ${p.estado === 'listo' ? `<span class="pill">Calidad ${p.analisis.metricas.puntaje}/100</span><a class="btn small" href="#/ver/${p.id}">Ver</a>` : ''}
+          <button class="btn small icono pin${p.fijado ? ' on' : ''}" type="button" data-fijar="${p.id}" aria-pressed="${p.fijado ? 'true' : 'false'}" aria-label="${p.fijado ? 'Quitar de fijados' : 'Fijar'} ${esc(p.nombre)}" title="${p.fijado ? 'Quitar de fijados' : 'Fijar arriba'}">${p.fijado ? '★' : '☆'}</button>
           <button class="btn small danger" type="button" data-borrar="${p.id}" aria-label="Eliminar ${esc(p.nombre)}">Eliminar</button>
         </div>
       </li>`).join('');
   };
   pintar();
-  document.getElementById('q').addEventListener('input', (e) => pintar(e.target.value));
+  $q.addEventListener('input', pintar);
+  document.getElementById('orden').addEventListener('change', (e) => {
+    orden = ORDENES[e.target.value] ? e.target.value : 'recientes';
+    try { localStorage.setItem('autodocs-orden', orden); } catch { /* sin almacenamiento: no se recuerda */ }
+    pintar();
+  });
   $lista.addEventListener('click', async (e) => {
+    const idFijar = e.target.closest('[data-fijar]')?.dataset.fijar;
+    if (idFijar) {
+      const p = proyectos.find((x) => x.id === Number(idFijar));
+      if (!p) return;
+      // Se guarda solo el campo nuevo `fijado`; los registros anteriores (sin el campo) siguen siendo válidos.
+      p.fijado = !p.fijado;
+      await put('projects', p);
+      pintar();
+      aviso(p.fijado ? `Fijado: ${p.nombre}` : `Ya no está fijado: ${p.nombre}`);
+      document.querySelector(`[data-fijar="${p.id}"]`)?.focus();
+      return;
+    }
     const id = e.target.closest('[data-borrar]')?.dataset.borrar;
     if (!id) return;
     const p = proyectos.find((x) => x.id === Number(id));
